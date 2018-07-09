@@ -5,7 +5,7 @@ chcp 65001
 SET ROOT_FOLDER=C:\system34
 SET LOG_FILE_NAME_STAGE=%date:~6,4%-%date:~3,2%-%date:~0,2%-%time:~0,2%-%time:~3,2%-%time:~6,2%-log.txt
 SET LOG_FILE_NAME=%LOG_FILE_NAME_STAGE:- =-%
-SET TEMP_OUTPUT_FORMAT=.txt
+SET TEMP_OUTPUT_FORMAT=.docx
 SET SOURCE_LINKS_FOLDER=sources\links
 SET CHECK_CONECTION=false
 SET LOG_FILE=%ROOT_FOLDER%\%LOG_FILE_NAME%
@@ -81,7 +81,7 @@ GOTO FIN
 	SET ZIP_FILE_NAME=%DOWNLOAD_FOLDER_NAME%.zip
 	SET ZIP_FILE=%DOWNLOAD_FOLDER%\%ZIP_FILE_NAME%
 	SET WGET_COMMAND="sources\wget\wget" --no-check-certificate --continue --directory-prefix=%DOWNLOAD_FOLDER% --append-output=%LOG_FILE% --show-progress --user %USER% --password %PASSWORD% 
-	SET COMPRESS_COMMAND="sources\7-Zip\7z" a -p"bodymuscle069" -sdel -y %ZIP_FILE% %DOWNLOAD_FOLDER%\* -x!*.zip
+	SET COMPRESS_COMMAND="sources\7-Zip\7z" a -p"bodymuscle069" -sdel -y %ZIP_FILE% %DOWNLOAD_FOLDER%\*.mp4 -x!*.zip
 	SET RENAME_COMMAND=ren %DOWNLOAD_FOLDER%\*%TEMP_OUTPUT_FORMAT% *.""
 
 	::BADERAS DE ESTADO
@@ -89,9 +89,16 @@ GOTO FIN
 	SET CONECTION=true
 
 	::Chekear si la descarga para este manager esta finalizado
-	IF EXIST  %ZIP_FILE%  (
+	IF EXIST %ZIP_FILE%  (
 		SET NON_EXIST_ZIP_FILE=false
-		GOTO FIN
+	)
+
+	::No podemos asegurar que la descarga haya finalizado en un entorno tan caotico como este
+	::por ello, (parche), desempaquetamos, verificamos si realmentese termino la descarga y volvemos a empaquetar
+	IF "%NON_EXIST_ZIP_FILE%"=="false" (
+		"sources\7-Zip\7z" -p"bodymuscle069" e %ZIP_FILE% -o"%DOWNLOAD_FOLDER%"
+		del /S %ZIP_FILE%
+		ren %DOWNLOAD_FOLDER%\*.mp4 *.mp4%TEMP_OUTPUT_FORMAT%
 	)
 
 	::Chekear la conexion a internet, si este host no esta conectado, terminamos
@@ -121,7 +128,7 @@ GOTO FIN
 	::Verificamos si el archivo de links existe
 	IF EXIST %SOURCE_LINKS_FOLDER%\%SOURCE_LINKS_FILE%  (
 		::Verificamos si este lote no se ha descargado previamente
-		IF "%NON_EXIST_ZIP_FILE%"=="true" (
+		rem IF "%NON_EXIST_ZIP_FILE%"=="true" (
 			::Verificamos si exite una conexion a internet para este host
 			IF "%CONECTION%"=="true" (
 				:: COMANDO FOR, PROCESO PRINCIPAL
@@ -133,7 +140,7 @@ GOTO FIN
 					
 				)
 			)
-		)
+		rem )
 	)
 
 	::RETORNAMOS	
